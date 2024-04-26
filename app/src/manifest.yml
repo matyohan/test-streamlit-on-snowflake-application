@@ -20,18 +20,10 @@ configuration:
 
 references:
   - order_table:
-      label: "information_schema" 
+      label: "Table source à comparer " 
       description: "Give the access to the information_schema.column table"
       privileges:
         - SELECT
       object_type: Table 
       multi_valued: false 
       register_callback: app_instance_schema.update_reference 
-  - site_recovery_table:
-      label: "Prod_Table" 
-      description: "Provide access to the prod table"
-      privileges:
-        - SELECT
-      object_type: Table 
-      multi_valued: false 
-      register_callback: app_instance_schema.update_reference
