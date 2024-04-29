@@ -1,29 +1,68 @@
 #version identifier
-manifest_version: 1
+manifest_version: 1 # this is the Snowflake defined manifest file version. If there are new configuration options or additions, the version number will change.
 
 version:
-  name: V1
+  name: V1 # this is a user-defined version for the application. This version identifier is used when creating the app package.
   label: Version One
   comment: The first version of the application
 
 #artifacts that are distributed from this version of the package
-artifacts:
-  setup_script: setup.sql
+artifacts: # this contains options and definitions for where various parts of our package is located. In particular the setup_script option is required.
+  setup_script: scripts/setup.sql
   default_streamlit: app_instance_schema.streamlit
   extension_code: true
 
 #runtime configuration for this version
-configuration:
+configuration: # this is used to define what logging we want to use in our application. During development we will want a log level of debug.
   log_level: debug
-  trace_level: always
+  trace_level: off
+
 
 
 references:
-  - order_table:
-      label: "Table source à comparer " 
-      description: "Give the access to the information_schema.column table"
-      privileges:
-        - SELECT
-      object_type: Table 
-      multi_valued: false 
-      register_callback: app_instance_schema.update_reference 
+- table_source:
+    label: "Source table"
+    description: "Please select the table that contains original data"
+    privileges:
+      - SELECT
+      - INSERT
+      - UPDATE
+      - REFERENCES
+    object_type: TABLE
+    multi_valued: false
+    register_callback: app_instance_schema.update_reference
+
+- table_target:
+    label: "Target table"
+    description: "Please select the table that contains target data"
+    privileges:
+      - SELECT
+      - INSERT
+      - UPDATE
+      - REFERENCES
+    object_type: TABLE
+    multi_valued: false
+    register_callback: app_instance_schema.update_reference
+
+
+- table_parametrage_test:
+    label: "table list test"
+    description: "donner acces à la table de paramatrege dans table_compare_db_input_table_list"
+    privileges:
+      - SELECT
+      - INSERT
+      - UPDATE
+      - REFERENCES
+    object_type: TABLE
+    multi_valued: false
+    register_callback: app_instance_schema.update_reference
+
+- information_schema_view:
+    label: "Information schema view"
+    description: "Please select the relevant infomation schema view"
+    privileges:
+      - SELECT
+      - REFERENCES
+    object_type: VIEW
+    multi_valued: false
+    register_callback: app_instance_schema.update_reference

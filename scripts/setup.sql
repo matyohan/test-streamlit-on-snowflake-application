@@ -11,33 +11,31 @@ create or alter versioned schema app_instance_schema;
 grant usage on schema app_instance_schema to application role app_instance_role;
 
 
---La procedure sotckée UPDATE_REFERENCE : création et droits 
-create or replace procedure app_instance_schema.update_reference(ref_name string, operation string, ref_or_alias string)
-returns string
-language sql
-as $$
-begin
-  case (operation)
-    when 'ADD' then
-       select system$set_reference(:ref_name, :ref_or_alias);
-    when 'REMOVE' then
-       select system$remove_reference(:ref_name, :ref_or_alias);
-    when 'CLEAR' then
-       select system$remove_all_references();
-    else
-       return 'Unknown operation: ' || operation;
-  end case;
-  return 'Success';
-end;
-$$;
-
+--La procedure sotckée update_reference : création et droits 
+create procedure app_instance_schema.update_reference(ref_name string, operation string, ref_or_alias string)
+    returns string
+    language sql
+    as $$
+        begin
+            case (operation)
+                when 'ADD' then
+                    select system$set_reference(:ref_name, :ref_or_alias);
+                when 'REMOVE' then
+                    select system$remove_reference(:ref_name);
+                when 'CLEAR' then
+                    select system$remove_reference(:ref_name);
+                else
+                    return 'Unknown operation: ' || operation;
+            end case;
+            system$log('debug', 'register_single_callback: ' || operation || ' succeeded');
+            return 'Operation ' || operation || ' succeeded';
+        end;
+    $$;
 --grant usage
 grant usage on procedure app_instance_schema.update_reference(string, string, string) to application role app_instance_role;
 
-
-
---Les procédures stockées  GET_DICTIONNARY_SOURCE
-
+/* 
+--Les procédures stockées GET_DICTIONNARY_CIBLE, GET_DICTIONNARY_SOURCE, COMPARE_STATISTICS, GET_STATISTICS  : création et droits
 CREATE OR REPLACE PROCEDURE app_instance_schema.GET_DICTIONNARY_SOURCE(table_list string, information_schema_columns string)
 RETURNS TABLE ()
 LANGUAGE SQL
@@ -61,14 +59,14 @@ AS 'DECLARE
         return table(res);
 END';
 
-
--- grant usage
 grant usage on procedure app_instance_schema.GET_DICTIONNARY_SOURCE(string) to application role app_instance_role;
+*/
 
 
 
+-----------------------------------------------------
 -- TABLE DE PARAMETRAGE : Creer le schema INPUT puis la table table_list 
-
+--------------------------------------------
 CREATE or replace TABLE app_instance_schema.TABLE_LIST (
   table_name VARCHAR(100) DEFAULT NULL,
   database_source VARCHAR(100) DEFAULT NULL,
@@ -87,7 +85,10 @@ INSERT INTO app_instance_schema.TABLE_LIST
 GRANT SELECT ON TABLE app_instance_schema.TABLE_LIST TO APPLICATION ROLE app_instance_role;
 
 
+
+--------------------------------------------------
 -- CREATION DE L'APPLICATION STEAMLIT
+--------------------------------------------------
 create or replace streamlit app_instance_schema.streamlit from '/libraries' main_file='streamlit.py';
 
 grant usage on streamlit app_instance_schema.streamlit to application role app_instance_role;
